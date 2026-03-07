@@ -1,39 +1,29 @@
-/**
- * IS_Agent_Alpha: Core Logic Layer (agent.js)
- * VERSION: Clean Sweep (Final Fix for Undefined Errors)
- */
-
+// Initialization
 const SUPABASE_URL = 'https://essquahbhmpehemjsmbq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_SR1YSCO6Nshdr227My-NTg_crmO_t_t';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const logWindow = document.getElementById('log-window');
 const statusText = document.getElementById('status-text');
+const pulse = document.getElementById('pulse');
 
 function agentLog(message) {
     const timestamp = new Date().toLocaleTimeString();
-    logWindow.innerHTML += `<div style="margin-bottom: 5px;">[${timestamp}] ${message}</div>`;
+    logWindow.innerHTML += `<div><span style="color:#475569">[${timestamp}]</span> ${message}</div>`;
     logWindow.scrollTop = logWindow.scrollHeight; 
 }
 
 async function runLearningCycle() {
     try {
-        statusText.innerText = "Scanning Tech Feeds...";
+        statusText.innerText = "Scanning...";
+        pulse.className = "active";
         
-        // 1. GET DATA
         const response = await puter.net.fetch("https://news.ycombinator.com");
-        let text = await response.text();
-        
-        // 2. CLEAN DATA (Remove scripts/tags so AI doesn't get confused)
-        const cleanText = text.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gmb, "")
-                              .replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gmb, "")
-                              .replace(/<[^>]*>/g, " ")
-                              .substring(0, 2000);
+        const text = await response.text();
+        const cleanText = text.replace(/<[^>]*>/g, " ").substring(0, 2000);
 
-        agentLog("Data cleaned. Requesting Gemini Analysis...");
+        agentLog("Analysis requested...");
 
-        // 3. REASONING (The specific v2 Object Format)
-        statusText.innerText = "Gemini is thinking...";
         const aiResponse = await puter.ai.chat({
             model: 'gemini-3.1-flash-lite-preview',
             messages: [{
@@ -42,35 +32,30 @@ async function runLearningCycle() {
             }]
         });
 
-        // ERROR CHECK: If Puter returns a weird object, we grab the right part
-        const aiResult = aiResponse.message?.content || aiResponse.text || aiResponse;
-        
-        if (!aiResult) throw new Error("AI returned no content.");
+        const knowledge = JSON.parse(aiResponse.replace(/```json|```/g, '').trim());
+        agentLog(`Detected: <b>${knowledge.topic}</b>`);
 
-        const knowledge = JSON.parse(aiResult.replace(/```json|```/g, '').trim());
-        agentLog(`Trend Identified: <span style="color: #60a5fa;">${knowledge.topic}</span>`);
-
-        // 4. PERSISTENCE
-        statusText.innerText = "Saving to Cloud...";
-        const { error } = await _supabase
+        const { error } = await supabaseClient
             .from('agent_knowledge')
             .insert([{ 
                 topic: knowledge.topic, 
                 content: knowledge.summary, 
-                importance_score: knowledge.impact,
-                source_url: "https://news.ycombinator.com"
+                importance_score: knowledge.impact
             }]);
 
         if (error) throw error;
 
-        agentLog("<span style='color: #22c55e;'>SUCCESS: Saved to Supabase!</span>");
+        agentLog("<span style='color: #22c55e;'>Successfully synced to cloud.</span>");
         statusText.innerText = "Idle";
+        pulse.className = "idle";
 
     } catch (err) {
-        agentLog(`<span style="color: #ef4444;">System Error: ${err.message}</span>`);
-        statusText.innerText = "Standby";
+        console.error(err);
+        agentLog(`<span style="color: #ef4444;">Error: ${err.message}</span>`);
+        statusText.innerText = "Error";
+        pulse.className = "idle";
     }
 }
 
 document.getElementById('start-btn').addEventListener('click', runLearningCycle);
-agentLog("IS Agent v1.2 Online (Production Mode)");
+agentLog("System Online. Standing by.");
