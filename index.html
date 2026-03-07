@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IS Autonomous Agent</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://js.puter.com/v2/"></script>
@@ -11,18 +10,12 @@
 <body>
     <div class="container">
         <header>
-            <h1>IS <span class="accent">Learning Agent</span></h1>
-            <div class="status-badge">
-                <span id="pulse" class="idle">●</span> 
-                Status: <span id="status-text">Ready</span>
-            </div>
+            <h1>IS Agent <span id="pulse">●</span></h1>
+            <p>Status: <span id="status-text">Idle</span></p>
         </header>
-
         <div id="log-window"></div>
-            
         <div class="controls">
-            <button id="start-btn" class="primary">Initiate Search</button>
-            <button id="auto-btn" class="secondary">Toggle Autonomy</button>
+            <button id="start-btn">Initiate Search</button>
         </div>
     </div>
     <script src="agent.js"></script>
