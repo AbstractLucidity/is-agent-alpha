@@ -1,55 +1,64 @@
 /**
  * IS_Agent_Alpha: Core Logic Layer (agent.js)
+ * VERSION: v2 API Fixed & Stable
  */
 
+// Initialize Supabase (Ensure your table 'agent_knowledge' has RLS policies allowing inserts if public)
 const SUPABASE_URL = 'https://essquahbhmpehemjsmbq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_SR1YSCO6Nshdr227My-NTg_crmO_t_t';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const logWindow = document.getElementById('log-window');
 const statusText = document.getElementById('status-text');
+const pulse = document.getElementById('pulse');
 
-function agentLog(message) {
+function agentLog(message, type = 'info') {
     const timestamp = new Date().toLocaleTimeString();
-    logWindow.innerHTML += `<div><span style="color:#64748b">[${timestamp}]</span> ${message}</div>`;
+    let color = type === 'error' ? '#ef4444' : type === 'success' ? '#22c55e' : '#cbd5e1';
+    logWindow.innerHTML += `<div><span style="color:#64748b">[${timestamp}]</span> <span style="color:${color}">${message}</span></div>`;
     logWindow.scrollTop = logWindow.scrollHeight; 
 }
 
 async function runLearningCycle() {
     try {
-        statusText.innerText = "Scanning...";
+        statusText.innerText = "Perception: Scanning...";
+        pulse.className = "active";
         
-        // 1. Scrape
+        // 1. PERCEPTION: Fetch & Clean
+        agentLog("Bypassing CORS to fetch news.ycombinator.com...");
         const response = await puter.net.fetch("https://news.ycombinator.com");
         const html = await response.text();
-        // Clean text: strip tags and limit size for context
-        const cleanText = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").substring(0, 2000);
+        
+        // Strip HTML tags and collapse whitespace to save tokens and prevent model confusion
+        const cleanText = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").substring(0, 3000);
+        agentLog("Data normalized. Initializing Reasoning Engine...");
 
-        agentLog("Analysis requested...");
+        // 2. REASONING: Call Puter AI (FIXED SYNTAX)
+        statusText.innerText = "Reasoning: Analyzing...";
+        const prompt = `Task: You are an autonomous analyst. Identify ONE major tech trend from this scraped text. 
+Output ONLY valid JSON in this exact format, with no markdown formatting or conversational text:
+{"topic": "Name of trend", "summary": "One sentence summary", "impact": 8}
 
-        // 2. AI Reasoning (Using modern object syntax)
-        // Ensure you pass options as a single object
-        const aiResponse = await puter.ai.chat({
-            model: 'gemini-3.1-flash-lite-preview',
-            messages: [{
-                role: 'user', 
-                content: `Task: Identify ONE tech trend from this text. Output ONLY valid JSON: {"topic": "name", "summary": "1 sentence", "impact": 10}. Data: ${cleanText}`
-            }]
+Scraped Data: ${cleanText}`;
+
+        // Notice: Prompt is the 1st argument, Options object is the 2nd argument
+        const aiResponse = await puter.ai.chat(prompt, { 
+            model: 'gemini-2.5-flash-lite' // Updated to model supported in docs
         });
 
-        // 3. Robust Parsing
-        // In v2, the response is often an object containing a 'message' property
-        const content = aiResponse?.message?.content || aiResponse;
+        // The v2 SDK returns a ChatResponse object with a message property
+        const content = aiResponse?.message?.content || aiResponse?.text || aiResponse.toString();
         if (!content) throw new Error("AI returned an empty response.");
 
-        // Extract JSON string if AI added conversational filler
+        // Robust parsing: Find the JSON block even if the AI adds filler text
         const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) throw new Error("AI output was not valid JSON");
+        if (!jsonMatch) throw new Error("Failed to extract JSON from AI output.");
         
         const knowledge = JSON.parse(jsonMatch[0]);
-        agentLog(`Detected: <b>${knowledge.topic}</b>`);
+        agentLog(`Intelligence Acquired: <b>${knowledge.topic}</b>`, 'success');
 
-        // 4. Persistence
+        // 3. PERSISTENCE: Save to Cloud
+        statusText.innerText = "Persistence: Syncing...";
         const { error } = await supabaseClient
             .from('agent_knowledge')
             .insert([{ 
@@ -60,15 +69,17 @@ async function runLearningCycle() {
 
         if (error) throw error;
 
-        agentLog("<span style='color: #22c55e;'>Saved to Supabase.</span>");
+        agentLog(`Memory committed to Supabase successfully.`, 'success');
         statusText.innerText = "Idle";
+        pulse.className = "idle";
 
     } catch (err) {
-        console.error("Agent Logic Error:", err);
-        agentLog(`<span style="color: #ef4444;">Error: ${err.message}</span>`);
-        statusText.innerText = "Error";
+        console.error("Agent Critical Failure:", err);
+        agentLog(`Error: ${err.message}`, 'error');
+        statusText.innerText = "System Error";
+        pulse.className = "idle";
     }
 }
 
 document.getElementById('start-btn').addEventListener('click', runLearningCycle);
-agentLog("System Online. Ready.");
+agentLog("IS Agent v2.0 Online. Standing by.");
