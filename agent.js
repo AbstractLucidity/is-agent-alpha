@@ -1,6 +1,6 @@
 /**
  * IS_Agent_Alpha: Core Logic Layer (agent.js)
- * STRATEGY: Official Puter.js v2 Quick-Start Syntax
+ * VERSION: Clean Sweep (Final Fix for Undefined Errors)
  */
 
 const SUPABASE_URL = 'https://essquahbhmpehemjsmbq.supabase.co';
@@ -9,7 +9,6 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const logWindow = document.getElementById('log-window');
 const statusText = document.getElementById('status-text');
-const pulse = document.getElementById('pulse');
 
 function agentLog(message) {
     const timestamp = new Date().toLocaleTimeString();
@@ -19,31 +18,40 @@ function agentLog(message) {
 
 async function runLearningCycle() {
     try {
-        pulse.className = 'active';
-        statusText.innerText = "Scanning...";
-        agentLog("<strong>Initiating live scan...</strong>");
-
-        // STEP 1: PERCEPTION
+        statusText.innerText = "Scanning Tech Feeds...";
+        
+        // 1. GET DATA
         const response = await puter.net.fetch("https://news.ycombinator.com");
-        const html = await response.text();
-        agentLog("Data received. Thinking...");
+        let text = await response.text();
+        
+        // 2. CLEAN DATA (Remove scripts/tags so AI doesn't get confused)
+        const cleanText = text.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gmb, "")
+                              .replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gmb, "")
+                              .replace(/<[^>]*>/g, " ")
+                              .substring(0, 2000);
 
-        // STEP 2: REASONING (Matching your provided documentation)
+        agentLog("Data cleaned. Requesting Gemini Analysis...");
+
+        // 3. REASONING (The specific v2 Object Format)
         statusText.innerText = "Gemini is thinking...";
-        
-        // We use the simpler string-based prompt shown in the doc
-        const aiResponse = await puter.ai.chat(
-            `Find ONE tech trend in this text. Return ONLY JSON: {"topic": "name", "summary": "1 sentence", "impact": 10}. Text: ${html.substring(0, 3000)}`
-        );
+        const aiResponse = await puter.ai.chat({
+            model: 'gemini-3.1-flash-lite-preview',
+            messages: [{
+                role: 'user', 
+                content: `Task: Identify ONE tech trend. Output ONLY JSON: {"topic": "name", "summary": "1 sentence", "impact": 10}. Data: ${cleanText}`
+            }]
+        });
 
-        // Based on the doc, the response is usually the text itself
-        const cleanJsonText = aiResponse.toString().replace(/```json|```/g, '').trim();
-        const knowledge = JSON.parse(cleanJsonText);
+        // ERROR CHECK: If Puter returns a weird object, we grab the right part
+        const aiResult = aiResponse.message?.content || aiResponse.text || aiResponse;
         
-        agentLog(`Trend: <span style="color: #60a5fa;">${knowledge.topic}</span>`);
+        if (!aiResult) throw new Error("AI returned no content.");
 
-        // STEP 3: PERSISTENCE
-        statusText.innerText = "Saving...";
+        const knowledge = JSON.parse(aiResult.replace(/```json|```/g, '').trim());
+        agentLog(`Trend Identified: <span style="color: #60a5fa;">${knowledge.topic}</span>`);
+
+        // 4. PERSISTENCE
+        statusText.innerText = "Saving to Cloud...";
         const { error } = await _supabase
             .from('agent_knowledge')
             .insert([{ 
@@ -55,16 +63,14 @@ async function runLearningCycle() {
 
         if (error) throw error;
 
-        agentLog("<span style='color: #22c55e;'>SUCCESS: Saved to Cloud.</span>");
+        agentLog("<span style='color: #22c55e;'>SUCCESS: Saved to Supabase!</span>");
         statusText.innerText = "Idle";
-        pulse.className = 'idle';
 
     } catch (err) {
-        agentLog(`<span style="color: #ef4444;">Error: ${err.message}</span>`);
+        agentLog(`<span style="color: #ef4444;">System Error: ${err.message}</span>`);
         statusText.innerText = "Standby";
-        pulse.className = 'idle';
     }
 }
 
 document.getElementById('start-btn').addEventListener('click', runLearningCycle);
-agentLog("IS Agent v1.0 Initialized with v2 Library.");
+agentLog("IS Agent v1.2 Online (Production Mode)");
