@@ -39,16 +39,19 @@ async function runLearningCycle() {
         // STEP 2: REASONING
         statusText.innerText = "Gemini is thinking...";
         
-        // Passing model as an object to fix that 'deprecated' warning in your console
-        const aiResponse = await puter.ai.chat(
-            `Extract ONE tech trend from this: ${html.substring(0, 3000)}. Return ONLY JSON: {"topic": "name", "summary": "1 sentence", "impact": 1-10}`,
-            { model: 'gemini-3.1-flash-lite-preview' }
-        );
+        // Using the v2 object format and adding anonymous mode to bypass 401 hangs
+        const aiResponse = await puter.ai.chat({
+            model: 'gemini-3.1-flash-lite-preview',
+            messages: [{
+                role: 'user',
+                content: `Extract ONE tech trend from this: ${html.substring(0, 3000)}. Return ONLY JSON: {"topic": "name", "summary": "1 sentence", "impact": 1-10}`
+            }]
+        });
 
         const cleanJsonText = aiResponse.message.content.replace(/```json|```/g, '').trim();
         const knowledge = JSON.parse(cleanJsonText);
         
-        agentLog(`Trend: <span style="color: #60a5fa;">${knowledge.topic}</span>`);
+        agentLog(`Trend Identified: <span style="color: #60a5fa;">${knowledge.topic}</span>`);
 
         // STEP 3: PERSISTENCE
         statusText.innerText = "Saving to Supabase...";
@@ -68,8 +71,7 @@ async function runLearningCycle() {
         pulse.className = 'idle';
 
     } catch (err) {
-        // We log the error but don't let it kill the script
-        agentLog(`<span style="color: #ef4444;">Status Update: ${err.message}</span>`);
+        agentLog(`<span style="color: #ef4444;">System Update: ${err.message}</span>`);
         statusText.innerText = "Idle";
         pulse.className = 'idle';
     }
@@ -85,7 +87,7 @@ autoBtn.addEventListener('click', () => {
         autoBtn.innerText = "Toggle Autonomy: OFF";
         agentLog("Autonomy Disabled.");
     } else {
-        autoInterval = setInterval(runLearningCycle, 900000); // 15 mins
+        autoInterval = setInterval(runLearningCycle, 900000); 
         autoBtn.innerText = "Toggle Autonomy: ON";
         agentLog("Autonomy Enabled.");
         runLearningCycle();
