@@ -1,6 +1,6 @@
 /**
  * IS_Agent_Alpha: Core Logic Layer (agent.js)
- * STRATEGY: Direct Execution (Ignore 401 Console Warnings)
+ * DEPLOYMENT VERSION: GitHub Pages Stable
  */
 
 // 1. SYSTEM CONFIGURATION
@@ -28,30 +28,30 @@ function agentLog(message) {
 async function runLearningCycle() {
     try {
         pulse.className = 'active';
-        statusText.innerText = "Connecting...";
-        
+        statusText.innerText = "Scanning Tech Feeds...";
+        agentLog("<strong>Initiating live scan...</strong>");
+
         // STEP 1: PERCEPTION
-        // We fire this directly. If you're logged in elsewhere, it works.
         const response = await puter.net.fetch("https://news.ycombinator.com");
         const html = await response.text();
-        agentLog("Data received. Analysis starting...");
+        agentLog("Data received. Processing with Gemini...");
 
         // STEP 2: REASONING
         statusText.innerText = "Gemini is thinking...";
         
-        // Using the v2 object format and adding anonymous mode to bypass 401 hangs
+        // Using the single-object parameter format to satisfy v2 requirements
         const aiResponse = await puter.ai.chat({
             model: 'gemini-3.1-flash-lite-preview',
             messages: [{
                 role: 'user',
-                content: `Extract ONE tech trend from this: ${html.substring(0, 3000)}. Return ONLY JSON: {"topic": "name", "summary": "1 sentence", "impact": 1-10}`
+                content: `Identify ONE tech trend from this HTML. Return ONLY JSON: {"topic": "name", "summary": "1 sentence", "impact": 1-10} Content: ${html.substring(0, 3500)}`
             }]
         });
 
         const cleanJsonText = aiResponse.message.content.replace(/```json|```/g, '').trim();
         const knowledge = JSON.parse(cleanJsonText);
         
-        agentLog(`Trend Identified: <span style="color: #60a5fa;">${knowledge.topic}</span>`);
+        agentLog(`Trend: <span style="color: #60a5fa;">${knowledge.topic}</span>`);
 
         // STEP 3: PERSISTENCE
         statusText.innerText = "Saving to Supabase...";
@@ -94,4 +94,4 @@ autoBtn.addEventListener('click', () => {
     }
 });
 
-agentLog("IS Agent v1.0 Initialized. Ready for command.");
+agentLog("IS Agent v1.0 Initialized on GitHub Pages.");
