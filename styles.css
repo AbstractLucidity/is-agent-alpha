@@ -1,46 +1,61 @@
 body {
-    background: #0f172a; /* Dark Navy */
-    color: #f8fafc;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: 'Inter', -apple-system, sans-serif;
     display: flex;
     justify-content: center;
-    padding: 20px;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
 }
 
 .container {
-    width: 100%;
-    max-width: 800px;
+    width: 90%;
+    max-width: 700px;
     background: #1e293b;
     padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    border-radius: 16px;
+    border: 1px solid #334155;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
 }
 
+header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+h1 { margin: 0; font-size: 1.5rem; }
+.accent { color: #38bdf8; }
+
+.status-badge { background: #0f172a; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; border: 1px solid #334155; }
+
 #log-window {
-    height: 300px;
+    height: 350px;
     background: #000;
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 15px;
     overflow-y: auto;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 0.9rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
     border: 1px solid #334155;
     margin-bottom: 20px;
+    color: #94a3b8;
 }
+
+.controls { display: flex; gap: 10px; }
+
+button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.primary { background: #3b82f6; color: white; }
+.primary:hover { background: #2563eb; }
+
+.secondary { background: #334155; color: #cbd5e1; }
+.secondary:hover { background: #475569; }
 
 .idle { color: #64748b; }
 .active { color: #22c55e; animation: blink 1s infinite; }
-
 @keyframes blink { 50% { opacity: 0; } }
-
-button {
-    background: #3b82f6;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-button:hover { background: #2563eb; }
