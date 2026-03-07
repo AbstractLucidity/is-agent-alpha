@@ -1,6 +1,6 @@
 /**
  * IS_Agent_Alpha: Core Logic Layer (agent.js)
- * FINAL GITHUB PRODUCTION VERSION
+ * DEPLOYMENT: GitHub Pages Production Stable
  */
 
 const SUPABASE_URL = 'https://essquahbhmpehemjsmbq.supabase.co';
@@ -33,23 +33,22 @@ async function runLearningCycle() {
         agentLog("Data received. Requesting Gemini Analysis...");
 
         // STEP 2: REASONING 
-        // FIX: Passing as a single object with 'model' and 'messages' to satisfy Puter v2
+        // FIX: Using the v2 'messages' array format to prevent 'undefined' returns
         statusText.innerText = "Gemini is thinking...";
         const aiResponse = await puter.ai.chat({
-            model: 'gemini-3.1-flash-lite-preview',
+            model: 'google/gemini-2.5-flash',
             messages: [{
                 role: 'user',
                 content: `Find ONE tech trend in this text. Return ONLY JSON: {"topic": "name", "summary": "1 sentence", "impact": 10}. Text: ${html.substring(0, 3000)}`
             }]
         });
 
-        // Validation: Ensure AI didn't return undefined
-        if (!aiResponse || !aiResponse.message || !aiResponse.message.content) {
-            throw new Error("AI returned empty data. Check Puter credits/login.");
+        // Validation: Verify the response structure before parsing
+        if (!aiResponse?.text) {
+            throw new Error("AI returned empty data. Check your Puter.com login status.");
         }
 
-        const content = aiResponse.message.content;
-        const cleanJsonText = content.replace(/```json|```/g, '').trim();
+        const cleanJsonText = aiResponse.text.replace(/```json|```/g, '').trim();
         const knowledge = JSON.parse(cleanJsonText);
         
         agentLog(`Trend Identified: <span style="color: #60a5fa;">${knowledge.topic}</span>`);
@@ -72,7 +71,7 @@ async function runLearningCycle() {
         pulse.className = 'idle';
 
     } catch (err) {
-        agentLog(`<span style="color: #ef4444;">System Update: ${err.message}</span>`);
+        agentLog(`<span style="color: #ef4444;">Status: ${err.message}</span>`);
         statusText.innerText = "System Standby";
         pulse.className = 'idle';
     }
