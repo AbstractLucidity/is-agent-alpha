@@ -3,37 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IS Autonomous Agent</title>
-    <link rel="stylesheet" href="styles.css">
-    
-    <!-- Cloud OS and DB Dependencies -->
-    <script src="https://js.puter.com/v2/"></script>
+    <title>IS Agent Alpha | Autonomous Trend Scraper</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://js.puter.com/v2/"></script>
 </head>
 <body>
-    <div class="agent-terminal">
-        <header class="terminal-header">
-            <div class="title-group">
-                <!-- THIS IS THE ELEMENT THAT WAS MISSING OR NULL -->
-                <div class="indicator" id="pulse"></div>
-                <h1>IS_Agent_Alpha</h1>
-            </div>
-            <div class="status-badge">
-                Status: <span id="status-text">Idle</span>
+    <div class="container">
+        <header>
+            <h1>IS_AGENT_v1.3</h1>
+            <div id="status-container">
+                <span id="pulse" class="idle"></span>
+                <span id="status-text">System Standby</span>
             </div>
         </header>
 
-        <div id="log-window"></div>
+        <main>
+            <div id="log-window">
+                <div class="log-entry">[SYSTEM] Waiting for initialization...</div>
+            </div>
             
-        <div class="controls">
-            <!-- THIS IS THE BUTTON IT LOOKS FOR -->
-            <button id="start-btn" class="btn-primary">
-                Initiate Autonomous Cycle
-            </button>
-        </div>
+            <div class="controls">
+                <button id="start-btn" class="primary-btn">Initiate Scan</button>
+                <button id="auto-btn" class="secondary-btn">Toggle Autonomy: OFF</button>
+            </div>
+        </main>
     </div>
-    
-    <!-- SCRIPT MUST BE AT THE BOTTOM -->
     <script src="agent.js"></script>
 </body>
 </html>
