@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IS Autonomous Agent</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <div class="container">
+        header>
+            <h1>IS Learning Agent <span id="pulse" class="idle">●</span></h1>
+            <p>Status: <span id="status-text">Waiting for input...</span></p>
+        </header>
+
+        <main>
+            <div id="log-window">
+                </div>
+            
+            <div class="controls">
+                <button id="start-btn">Initiate Search</button>
+                <button id="auto-btn">Toggle Autonomy</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="agent.js"></script>
+</body>
+</html>
