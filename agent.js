@@ -1,6 +1,6 @@
 /**
  * IS_Agent_Alpha: Core Logic Layer (agent.js)
- * DEPLOYMENT VERSION: GitHub Pages Stable + Error Handling
+ * FINAL GITHUB PRODUCTION VERSION
  */
 
 const SUPABASE_URL = 'https://essquahbhmpehemjsmbq.supabase.co';
@@ -32,17 +32,20 @@ async function runLearningCycle() {
         const html = await response.text();
         agentLog("Data received. Requesting Gemini Analysis...");
 
-        // STEP 2: REASONING
+        // STEP 2: REASONING 
+        // FIX: Passing as a single object with 'model' and 'messages' to satisfy Puter v2
         statusText.innerText = "Gemini is thinking...";
-        
-        // Revised AI call for Puter v2 on GitHub
-        const aiResponse = await puter.ai.chat(
-            `Extract ONE tech trend from this: ${html.substring(0, 3000)}. Return ONLY JSON: {"topic": "name", "summary": "1 sentence", "impact": 10}`
-        );
+        const aiResponse = await puter.ai.chat({
+            model: 'gemini-3.1-flash-lite-preview',
+            messages: [{
+                role: 'user',
+                content: `Find ONE tech trend in this text. Return ONLY JSON: {"topic": "name", "summary": "1 sentence", "impact": 10}. Text: ${html.substring(0, 3000)}`
+            }]
+        });
 
-        // Check if the response actually exists
-        if (!aiResponse || !aiResponse.message) {
-            throw new Error("AI response was empty. Try logging into Puter.com again.");
+        // Validation: Ensure AI didn't return undefined
+        if (!aiResponse || !aiResponse.message || !aiResponse.message.content) {
+            throw new Error("AI returned empty data. Check Puter credits/login.");
         }
 
         const content = aiResponse.message.content;
@@ -70,7 +73,7 @@ async function runLearningCycle() {
 
     } catch (err) {
         agentLog(`<span style="color: #ef4444;">System Update: ${err.message}</span>`);
-        statusText.innerText = "Idle";
+        statusText.innerText = "System Standby";
         pulse.className = 'idle';
     }
 }
