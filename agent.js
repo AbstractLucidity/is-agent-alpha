@@ -1,6 +1,6 @@
 /**
- * IS_Agent_Alpha: Core Logic Layer (agent.js)
- * VERSION: AllOrigins Proxy + Optimized AI Logic
+ * IS_Agent_Alpha: v1.4 (Full Autonomy)
+ * STRATEGY: Self-Starting Recursive Cycles
  */
 
 const SUPABASE_URL = 'https://essquahbhmpehemjsmbq.supabase.co';
@@ -9,6 +9,7 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const logWindow = document.getElementById('log-window');
 const statusText = document.getElementById('status-text');
+const pulse = document.getElementById('pulse');
 
 function agentLog(message) {
     const timestamp = new Date().toLocaleTimeString();
@@ -16,63 +17,55 @@ function agentLog(message) {
     logWindow.scrollTop = logWindow.scrollHeight; 
 }
 
+// THE CORE LOGIC
 async function runLearningCycle() {
     try {
-        statusText.innerText = "Scraping via Proxy...";
-        agentLog("<strong>Initiating AllOrigins bridge...</strong>");
-
-        // 1. PERCEPTION (Using AllOrigins instead of Puter Fetch)
+        pulse.className = 'active';
+        statusText.innerText = "Auto-Scanning...";
+        
+        // 1. PERCEPTION
         const targetUrl = "https://news.ycombinator.com";
         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-        
         const response = await fetch(proxyUrl);
-        if (!response.ok) throw new Error("Proxy connection failed.");
-        
         const data = await response.json();
-        const html = data.contents; // AllOrigins wraps the site in 'contents'
-        
-        // Clean the HTML to keep only text for the AI
-        const cleanText = html.replace(/<[^>]*>/g, ' ').substring(0, 2000);
-        agentLog("Data bridged and cleaned. Analyzing...");
+        const cleanText = data.contents.replace(/<[^>]*>/g, ' ').substring(0, 2000);
 
         // 2. REASONING
-        statusText.innerText = "Gemini is thinking...";
         const aiResponse = await puter.ai.chat({
             model: 'gemini-3.1-flash-lite-preview',
             messages: [{
                 role: 'user', 
-                content: `Task: Extract ONE tech trend. Output ONLY valid JSON: {"topic": "name", "summary": "1 sentence", "impact": 10}. Data: ${cleanText}`
+                content: `Identify ONE tech trend from this: ${cleanText}. Return ONLY JSON: {"topic": "name", "summary": "1 sentence", "impact": 10}`
             }]
         });
 
-        // Handle both possible response formats in v2
         const content = aiResponse.text || aiResponse.message?.content;
-        if (!content) throw new Error("AI Reasoning returned empty.");
-
         const knowledge = JSON.parse(content.replace(/```json|```/g, '').trim());
-        agentLog(`Trend: <span style="color: #60a5fa;">${knowledge.topic}</span>`);
+        agentLog(`Auto-Discovery: <span style="color: #60a5fa;">${knowledge.topic}</span>`);
 
         // 3. PERSISTENCE
-        statusText.innerText = "Syncing to Cloud...";
-        const { error } = await _supabase
-            .from('agent_knowledge')
-            .insert([{ 
-                topic: knowledge.topic, 
-                content: knowledge.summary, 
-                importance_score: knowledge.impact,
-                source_url: targetUrl
-            }]);
+        await _supabase.from('agent_knowledge').insert([{ 
+            topic: knowledge.topic, 
+            content: knowledge.summary, 
+            importance_score: knowledge.impact,
+            source_url: targetUrl
+        }]);
 
-        if (error) throw error;
-
-        agentLog("<span style='color: #22c55e;'>SUCCESS: Cloud Sync Complete.</span>");
-        statusText.innerText = "Idle";
-
+        agentLog("<span style='color: #22c55e;'>SUCCESS: Cycle Complete.</span>");
+        
     } catch (err) {
-        agentLog(`<span style="color: #ef4444;">Bridge Error: ${err.message}</span>`);
-        statusText.innerText = "Standby";
+        agentLog(`<span style="color: #ef4444;">Cycle Skipped: ${err.message}</span>`);
+    } finally {
+        statusText.innerText = "Waiting for next cycle...";
+        pulse.className = 'idle';
+        // RECURSIVE CALL: Schedules the next run in 15 minutes
+        setTimeout(runLearningCycle, 900000); 
+        agentLog("Next autonomous scan scheduled in 15m.");
     }
 }
 
-document.getElementById('start-btn').addEventListener('click', runLearningCycle);
-agentLog("IS Agent v1.3 Bridge Mode Enabled.");
+// INITIALIZATION: Start first scan 5 seconds after load
+window.onload = () => {
+    agentLog("<strong>System Online. Initializing Auto-Pilot...</strong>");
+    setTimeout(runLearningCycle, 5000); 
+};
