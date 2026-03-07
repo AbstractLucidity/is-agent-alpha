@@ -5,23 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IS Autonomous Agent</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Load Puter v2 and Supabase -->
+    
+    <!-- Cloud OS and DB Dependencies -->
     <script src="https://js.puter.com/v2/"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>IS <span class="accent">Learning Agent</span></h1>
-            <p>Status: <span id="status-text">Idle</span></p>
+    <div class="agent-terminal">
+        <header class="terminal-header">
+            <div class="title-group">
+                <div class="indicator" id="pulse"></div>
+                <h1>IS_Agent_Alpha</h1>
+            </div>
+            <div class="status-badge">
+                Status: <span id="status-text">Idle</span>
+            </div>
         </header>
 
         <div id="log-window"></div>
             
         <div class="controls">
-            <button id="start-btn">Initiate Search</button>
+            <button id="start-btn" class="btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                Initiate Autonomous Cycle
+            </button>
         </div>
     </div>
+    
+    <!-- Load logic after DOM is ready -->
     <script src="agent.js"></script>
 </body>
 </html>
