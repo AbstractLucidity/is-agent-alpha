@@ -1,9 +1,8 @@
 /**
  * IS_Agent_Alpha: Core Logic Layer (agent.js)
- * DEPLOYMENT VERSION: GitHub Pages Stable
+ * DEPLOYMENT VERSION: GitHub Pages Stable + Error Handling
  */
 
-// 1. SYSTEM CONFIGURATION
 const SUPABASE_URL = 'https://essquahbhmpehemjsmbq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_SR1YSCO6Nshdr227My-NTg_crmO_t_t';
 
@@ -22,9 +21,6 @@ function agentLog(message) {
     logWindow.scrollTop = logWindow.scrollHeight; 
 }
 
-/**
- * THE CORE LEARNING CYCLE
- */
 async function runLearningCycle() {
     try {
         pulse.className = 'active';
@@ -34,24 +30,26 @@ async function runLearningCycle() {
         // STEP 1: PERCEPTION
         const response = await puter.net.fetch("https://news.ycombinator.com");
         const html = await response.text();
-        agentLog("Data received. Processing with Gemini...");
+        agentLog("Data received. Requesting Gemini Analysis...");
 
         // STEP 2: REASONING
         statusText.innerText = "Gemini is thinking...";
         
-        // Using the single-object parameter format to satisfy v2 requirements
-        const aiResponse = await puter.ai.chat({
-            model: 'gemini-3.1-flash-lite-preview',
-            messages: [{
-                role: 'user',
-                content: `Identify ONE tech trend from this HTML. Return ONLY JSON: {"topic": "name", "summary": "1 sentence", "impact": 1-10} Content: ${html.substring(0, 3500)}`
-            }]
-        });
+        // Revised AI call for Puter v2 on GitHub
+        const aiResponse = await puter.ai.chat(
+            `Extract ONE tech trend from this: ${html.substring(0, 3000)}. Return ONLY JSON: {"topic": "name", "summary": "1 sentence", "impact": 10}`
+        );
 
-        const cleanJsonText = aiResponse.message.content.replace(/```json|```/g, '').trim();
+        // Check if the response actually exists
+        if (!aiResponse || !aiResponse.message) {
+            throw new Error("AI response was empty. Try logging into Puter.com again.");
+        }
+
+        const content = aiResponse.message.content;
+        const cleanJsonText = content.replace(/```json|```/g, '').trim();
         const knowledge = JSON.parse(cleanJsonText);
         
-        agentLog(`Trend: <span style="color: #60a5fa;">${knowledge.topic}</span>`);
+        agentLog(`Trend Identified: <span style="color: #60a5fa;">${knowledge.topic}</span>`);
 
         // STEP 3: PERSISTENCE
         statusText.innerText = "Saving to Supabase...";
@@ -77,7 +75,6 @@ async function runLearningCycle() {
     }
 }
 
-// 4. EVENT LISTENERS
 document.getElementById('start-btn').addEventListener('click', runLearningCycle);
 
 autoBtn.addEventListener('click', () => {
