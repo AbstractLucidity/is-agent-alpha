@@ -1,95 +1,74 @@
 /**
- * IS_Agent_Alpha: v1.5 (Control & Autonomy Fix)
+ * IS_Agent_Alpha v2.0 - Continuous Autonomy
  */
-
 const SUPABASE_URL = 'https://essquahbhmpehemjsmbq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_SR1YSCO6Nshdr227My-NTg_crmO_t_t';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const logWindow = document.getElementById('log-window');
 const statusText = document.getElementById('status-text');
-const pulse = document.getElementById('pulse');
 const autoBtn = document.getElementById('auto-btn');
 
-let isAutoEnabled = false; // Track the state
-let autoTimeout = null;
+let isAuto = false;
 
-function agentLog(message) {
-    const timestamp = new Date().toLocaleTimeString();
-    logWindow.innerHTML += `<div style="margin-bottom: 5px;">[${timestamp}] ${message}</div>`;
-    logWindow.scrollTop = logWindow.scrollHeight; 
+function agentLog(msg, color = "#94a3b8") {
+    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+    logWindow.innerHTML += `<div style="margin-bottom:8px; color:${color}">[${time}] ${msg}</div>`;
+    logWindow.scrollTop = logWindow.scrollHeight;
 }
 
-async function runLearningCycle() {
+async function startCycle() {
+    if (!isAuto && event?.type !== 'click') return; // Stop if not auto or a manual click
+    
     try {
-        pulse.className = 'active';
-        statusText.innerText = "Scanning...";
-        
-        // 1. PERCEPTION
-        const targetUrl = "https://news.ycombinator.com";
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-        const response = await fetch(proxyUrl);
-        const data = await response.json();
-        const cleanText = data.contents.replace(/<[^>]*>/g, ' ').substring(0, 1500);
+        statusText.innerText = "WORKING";
+        agentLog("Bypassing CORS to fetch data...", "#00a3ff");
 
-        // 2. REASONING
-        const aiResponse = await puter.ai.chat({
+        const resp = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent("https://news.ycombinator.com")}`);
+        const data = await resp.json();
+        const text = data.contents.replace(/<[^>]*>/g, ' ').substring(0, 2000);
+
+        agentLog("Data normalized. Reasoning starting...");
+        
+        const ai = await puter.ai.chat({
             model: 'gemini-3.1-flash-lite-preview',
-            messages: [{
-                role: 'user', 
-                content: `JSON ONLY: {"topic": "name", "summary": "1 sentence", "impact": 10}. Data: ${cleanText}`
-            }]
+            messages: [{role: 'user', content: `Extract ONE trend as JSON: {"topic": "name", "summary": "1 sentence", "impact": 10}. Data: ${text}`}]
         });
 
-        const content = aiResponse.text || aiResponse.message?.content;
-        const knowledge = JSON.parse(content.replace(/```json|```/g, '').trim());
-        agentLog(`Discovery: <span style="color: #60a5fa;">${knowledge.topic}</span>`);
+        const res = JSON.parse((ai.text || ai.message.content).replace(/```json|```/g, ''));
+        agentLog(`Insight: ${res.topic}`, "#10b981");
 
-        // 3. PERSISTENCE
         await _supabase.from('agent_knowledge').insert([{ 
-            topic: knowledge.topic, 
-            content: knowledge.summary, 
-            importance_score: knowledge.impact,
-            source_url: targetUrl
+            topic: res.topic, content: res.summary, importance_score: res.impact 
         }]);
 
-        agentLog("<span style='color: #22c55e;'>SUCCESS: Knowledge Saved.</span>");
-        
-    } catch (err) {
-        agentLog(`<span style="color: #ef4444;">Error: ${err.message}</span>`);
+        agentLog("Memory committed to Supabase.", "#10b981");
+
+    } catch (e) {
+        agentLog(`Error: ${e.message}`, "#ef4444");
     } finally {
-        pulse.className = 'idle';
-        statusText.innerText = isAutoEnabled ? "Waiting for next cycle..." : "System Idle";
-        
-        // Only reschedule if Auto is still ON
-        if (isAutoEnabled) {
-            autoTimeout = setTimeout(runLearningCycle, 900000); 
-            agentLog("Next auto-scan in 15m.");
+        if (isAuto) {
+            statusText.innerText = "COOLDOWN";
+            agentLog("Restarting cycle in 30s...", "#64748b");
+            setTimeout(startCycle, 30000); // 30 second continuous loop
+        } else {
+            statusText.innerText = "IDLE";
         }
     }
 }
 
-// TOGGLE LOGIC
 autoBtn.onclick = () => {
-    isAutoEnabled = !isAutoEnabled;
+    isAuto = !isAuto;
+    autoBtn.classList.toggle('on');
+    autoBtn.innerText = isAuto ? "AUTONOMY: ACTIVE" : "AUTONOMY: DISABLED";
     
-    if (isAutoEnabled) {
-        autoBtn.innerText = "Toggle Autonomy: ON";
-        autoBtn.style.background = "#22c55e";
-        agentLog("<strong>Autonomy Enabled. Starting first cycle...</strong>");
-        runLearningCycle();
+    if (isAuto) {
+        agentLog("Continuous Autonomy Engaged.", "#10b981");
+        startCycle();
     } else {
-        autoBtn.innerText = "Toggle Autonomy: OFF";
-        autoBtn.style.background = "#475569";
-        clearTimeout(autoTimeout);
-        agentLog("Autonomy Disabled. Sequence stopped.");
+        agentLog("Sequence Termination Requested.", "#ef4444");
     }
 };
 
-// MANUAL START
-document.getElementById('start-btn').onclick = () => {
-    agentLog("Manual scan initiated.");
-    runLearningCycle();
-};
-
-window.onload = () => agentLog("System Ready. Click 'Toggle Autonomy' to start Auto-Pilot.");
+document.getElementById('start-btn').onclick = startCycle;
+window.onload = () => agentLog("IS_Agent_Alpha Online. Ready for instructions.");
