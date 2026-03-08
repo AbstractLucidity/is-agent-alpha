@@ -3,31 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IS Agent Alpha | Autonomous Trend Scraper</title>
+    <title>IS Agent Alpha | Continuous Autonomy</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://js.puter.com/v2/"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>IS_AGENT_v1.3</h1>
-            <div id="status-container">
-                <span id="pulse" class="idle"></span>
-                <span id="status-text">System Standby</span>
-            </div>
-        </header>
+    <div class="agent-card">
+        <div class="header">
+            <h1 style="margin:0; font-size: 1.2rem; color: #00a3ff;">IS_AGENT_ALPHA</h1>
+            <div id="status-badge" class="status-badge">System Idle</div>
+        </div>
 
-        <main>
-            <div id="log-window">
-                <div class="log-entry">[SYSTEM] Waiting for initialization...</div>
-            </div>
-            
-            <div class="controls">
-                <button id="start-btn" class="primary-btn">Initiate Scan</button>
-                <button id="auto-btn" class="secondary-btn">Toggle Autonomy: OFF</button>
-            </div>
-        </main>
+        <div id="log-window">
+            <div>[SYSTEM] Initializing core modules...</div>
+        </div>
+        
+        <div class="controls">
+            <button id="start-btn">RUN SINGLE SCAN</button>
+            <button id="auto-btn">TOGGLE CONTINUOUS AUTONOMY</button>
+        </div>
     </div>
     <script src="agent.js"></script>
 </body>
